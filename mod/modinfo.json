@@ -1,9 +1,10 @@
 {
-  "id": "kai.ultrawide219",
-  "name": "Ultrawide 21:9",
-  "version": "0.1.0",
-  "authors": "kai",
-  "description": "Renders Rain World at a true 21:9 internal resolution (1792x768 by default) instead of the stock 16:9 presets. You see more of each room horizontally, with no pixel stretching. Width is configurable in the BepInEx config (1792 = 21:9, 2560 ~= 32:9).",
-  "tags": "qol,display",
-  "requirements": ""
+	"id": "ultrawide219",
+	"name": "Ultrawide 21:9",
+	"version": "0.1.0",
+	"authors": "kai",
+	"description": "Renders Rain World at a true 21:9 internal resolution (1792x768 by default) instead of the stock 16:9 presets. You see more of each room horizontally, with no pixel stretching. Width is configurable in BepInEx/config/kai.ultrawide219.cfg (1792 = 21:9, 2560 ~= 32:9).",
+	"requirements": [],
+	"requirements_names": [],
+	"checksum_override_version": false
 }

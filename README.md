@@ -57,12 +57,28 @@ Override with `RAINWORLD_DIR` (env) or `-p:RainWorldDir=...` (MSBuild).
 ## Install
 
 ```bash
-scripts/deploy.sh            # build + copy to BepInEx/plugins/
-scripts/deploy.sh --remix    # also stage a toggleable Remix mod under StreamingAssets/mods/
+scripts/deploy.sh    # build + install as a Remix mod under StreamingAssets/mods/ultrawide219/
 ```
 
 Then launch the game and check `BepInEx/LogOutput.log` for the `Ultrawide 21:9` lines
 (it logs the IL-patch hit count and the applied resolution).
+
+### Two Rain World / Linux gotchas (both required)
+
+1. **BepInEx injection under Proton.** Rain World is a Windows `.exe` run through
+   Proton, and BepInEx hooks in via a `winhttp.dll` proxy that Wine ignores by default.
+   Set the Steam **Launch Options** to:
+   ```
+   WINEDLLOVERRIDES="winhttp=n,b" %command%
+   ```
+   Without this, BepInEx never loads and there is no `BepInEx/LogOutput.log` at all.
+
+2. **Plugins must be Remix mods, not `BepInEx/plugins/`.** Rain World's
+   `MultiFolderLoader` patcher *quarantines* anything in `BepInEx/plugins` (it moves
+   non-whitelisted files to `BepInEx/backup` on every launch) and only loads plugins
+   from `StreamingAssets/mods/<id>/plugins/`. `deploy.sh` installs there. With no
+   `enabledMods.txt` present, all mod folders load automatically; if you start managing
+   mods in the in-game **Remix** menu, keep *Ultrawide 21:9* enabled there.
 
 ## Configure
 
