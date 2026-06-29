@@ -10,6 +10,19 @@ display.
 > **Status: v0.2.** Works as a companion to SBCameraScroll. Built and tested against
 > Rain World **v1.11.x** (Downpour / Remix).
 
+## Screenshots
+
+*3440×1440 (21:9), with SBCameraScroll + this mod.*
+
+**Gameplay** — SBCameraScroll's stitched wide camera; this mod keeps the HUD and subtitles correct.
+![Gameplay at 21:9](docs/screenshots/gameplay.jpg)
+
+**Pause menu** — the darken filter spans the full width and the buttons sit at the real screen edges.
+![Pause menu at 21:9](docs/screenshots/pause-menu.jpg)
+
+**Main menu** — centered and correct at 21:9.
+![Main menu at 21:9](docs/screenshots/main-menu.jpg)
+
 ## What it does
 
 Rain World's UI is authored for a **768px-tall** coordinate space and is already
