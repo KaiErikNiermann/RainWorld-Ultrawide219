@@ -1,0 +1,14 @@
+<Project>
+  <!--
+    Central location of the Rain World install. Override on the command line with
+    `dotnet build -p:RainWorldDir="/path/to/Rain World"` or via the RAINWORLD_DIR env var.
+  -->
+  <PropertyGroup>
+    <RainWorldDir Condition="'$(RainWorldDir)' == '' and '$(RAINWORLD_DIR)' != ''">$(RAINWORLD_DIR)</RainWorldDir>
+    <RainWorldDir Condition="'$(RainWorldDir)' == ''">/mnt/hdd/SteamLibrary/steamapps/common/Rain World</RainWorldDir>
+
+    <GameManaged>$(RainWorldDir)/RainWorld_Data/Managed</GameManaged>
+    <BepInExCore>$(RainWorldDir)/BepInEx/core</BepInExCore>
+    <BepInExPlugins>$(RainWorldDir)/BepInEx/plugins</BepInExPlugins>
+  </PropertyGroup>
+</Project>

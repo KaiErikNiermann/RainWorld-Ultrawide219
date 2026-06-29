@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Pre-push hook: type-check (build) and style-check (dotnet format) before pushing.
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+PROJECT="$REPO_ROOT/src/Ultrawide219/Ultrawide219.csproj"
+
+echo "[pre-push] dotnet build (type-check)..."
+dotnet build "$PROJECT" -c Release -v minimal --nologo
+
+if dotnet format --help >/dev/null 2>&1; then
+  echo "[pre-push] dotnet format --verify-no-changes (lint/style)..."
+  dotnet format "$PROJECT" --verify-no-changes --no-restore || {
+    echo "[pre-push] style issues found. Run 'dotnet format' to fix." >&2
+    exit 1
+  }
+else
+  echo "[pre-push] dotnet format unavailable; skipping style check."
+fi
+
+echo "[pre-push] ok."
