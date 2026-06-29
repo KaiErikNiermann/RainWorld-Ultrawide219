@@ -47,14 +47,16 @@ Following the usual Rain World (Remix) mod convention:
 
 1. **Install SBCameraScroll** (Workshop or its
    [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases)).
-2. **Install this mod.** Grab `Ultrawide219.dll` from a build (see *Building* below) and
-   place the mod folder so it looks like:
+2. **Install this mod.** Download `ultrawide219-v*.zip` from the
+   [latest Release](https://github.com/KaiErikNiermann/RainWorld-Ultrawide219/releases/latest)
+   and extract the `ultrawide219/` folder into `RainWorld_Data/StreamingAssets/mods/`, so it
+   looks like:
    ```
    Rain World/RainWorld_Data/StreamingAssets/mods/ultrawide219/
      ├─ modinfo.json
      └─ plugins/Ultrawide219.dll
    ```
-   (`scripts/deploy.sh` does this for you from a local checkout.)
+   (Or build from source — see *Building* below; `scripts/deploy.sh` installs it for you.)
 3. **Enable both mods** in-game: **Options → Remix**, tick *SBCameraScroll* and
    *Ultrawide 21:9 UI*, then restart when prompted.
 4. **Configure** (see below).
