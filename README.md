@@ -1,143 +1,121 @@
-# Rain World — Ultrawide 21:9
+# Ultrawide 21:9 UI — Rain World
 
-A BepInEx mod that renders Rain World at a **true 21:9** internal resolution
-(`1792x768` by default) instead of the stock 16:9 presets. You see **more of each
-room horizontally**, with **no pixel stretching**. Width is configurable, so 32:9
-super-ultrawide works too.
+A companion mod that makes Rain World's **menus, HUD, and full-screen effects** behave
+correctly at **21:9 and wider**. It pairs with
+[**SBCameraScroll**](https://github.com/SchuhBaum/SBCameraScroll) — that mod widens the
+*gameplay* camera (stitching the room's camera textures together); this mod fixes
+everything *around* the gameplay so the whole experience is seamless on an ultrawide
+display.
 
-> Status: **v0.1 — experiment, superseded.** Builds and installs cleanly and *does*
-> widen the viewport — but investigation revealed a hard engine ceiling that makes a
-> clean from-scratch 21:9 impractical. **Recommended path is now SBCameraScroll** (see
-> below). This repo is kept as the engine write-up + a working resolution-override
-> reference. The DLL is no longer installed into the game.
+> **Status: v0.2.** Works as a companion to SBCameraScroll. Built and tested against
+> Rain World **v1.11.x** (Downpour / Remix).
 
-## ⚠️ The hard finding: rooms are baked at 1400×800 per camera position
+## What it does
 
-Rain World does not render rooms live. Each **camera position** has its own pre-baked
-**1400×800 PNG** (`levelTexture => persistentData.cameraTextures[…]`). Verified on disk:
-**all 1,729 room images are exactly 1400×800, no exceptions.** The `1400` in
-`hDisplace = (1400 - sSize.x)/2` *is* that width. Consequences:
+Rain World's UI is authored for a **768px-tall** coordinate space and is already
+width-aware almost everywhere (it reads `Options.ScreenSize`). Two things break it on a
+real ultrawide:
 
-- The stock 1366 viewport shows a 1366-window of the 1400 image (17px margin each side).
-- **There is no baked art beyond 1400px at any single camera position.** Widening to a
-  true 21:9 1792px needs 392px of art that does not exist in the files — so the extra
-  columns show void / unintended texture edges.
-- `CamPos` is the *bottom-left* corner of the intended view (center = `CamPos+(700,533)`),
-  which is why naive widening (this mod, v0.1) only extends rightward.
+1. Running at a **native tall resolution** (e.g. 1440) pushes the coordinate space off
+   768, so everything that centres on `(…, 384)` ends up mis-placed.
+2. A set of **uniform full-screen filters** (pause darken, fades, ghost/electric flashes,
+   cutscene letterbox bars) are hard-coded to ~1366/1400px wide and don't reach the edges.
 
-Real extra horizontal content can only come from **stitching the neighbouring camera
-positions' images** — which is a whole subsystem, and a mature mod already does it:
+So this mod:
 
-## ✅ Recommended: SBCameraScroll (+ its custom-resolution / dynamic-zoom)
+- **Renders at a 768-tall internal resolution at your chosen 21:9 width**, upscaled to your
+  monitor — keeping the entire UI coordinate space valid (vanilla's own centering then just
+  works) at authentic pixel-art scale.
+- **Stretches the uniform full-screen filters** to span the full width (height left alone).
+- **Fixes the few genuine wide-screen layout bugs** (`Custom.GetScreenOffsets` safe-area,
+  `SlideShow` intro/outro/dream-scene centring).
+- **Leaves hand-drawn art centred + pillarboxed** — black bars on fixed-size illustrations
+  are correct and intentional.
 
-[SBCameraScroll](https://github.com/SchuhBaum/SBCameraScroll) (SchuhBaum) stitches a
-room's per-position 1400×800 images into one composite, supports an **arbitrary custom
-resolution** (incl. non-768 heights, via its `FScreenMod`), and has a **Dynamic Zoom**
-option whose own description is *"the camera zoom is adjusted dynamically per room. This
-removes any black borders when using custom resolutions."* — i.e. the adaptive
-aspect-ratio behaviour, already built and tested. It is a superset of this mod, so the
-two must not run together (both overwrite `Options.screenResolutions`).
+It does **not** touch the gameplay camera — that's SBCameraScroll's job.
 
-Setup (in-game **Options → Remix**, after enabling the mod): Resolution → `Custom`,
-Custom Resolution → your monitor's native ultrawide (e.g. `3440x1440`), Dynamic Zoom → on.
+## Requirements
 
-The original design notes for *this* mod's hooks follow, kept for reference.
+- **Rain World v1.11+** (Downpour / Remix — ships with BepInEx).
+- **[SBCameraScroll](https://github.com/SchuhBaum/SBCameraScroll)** by SchuhBaum — provides
+  the widened gameplay camera. Install it first
+  ([Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2928752589)).
 
-## Why this is possible (and not stretching)
+## Installation
 
-Rain World is a Unity game built on the **Futile** 2D framework. Contrary to the
-common belief that it's hard-locked to 16:9, its renderer is actually
-**"fixed 768px height, arbitrary width"**:
+Following the usual Rain World (Remix) mod convention:
 
-- Every stock resolution (`Options.screenResolutions`) is `N x 768` — only the width
-  varies (`1024, 1280, 1360, 1366`, and the Steam Deck's `1229`).
-- `RainWorld.screenSize => Options.ScreenSize => screenResolutions[resolution]`.
-- `Futile.UpdateScreenWidth(w)` reallocates the render target at `w x 768`; the
-  orthographic size is derived from the fixed 768 height.
+1. **Install SBCameraScroll** (Workshop or its
+   [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases)).
+2. **Install this mod.** Grab `Ultrawide219.dll` from a build (see *Building* below) and
+   place the mod folder so it looks like:
+   ```
+   Rain World/RainWorld_Data/StreamingAssets/mods/ultrawide219/
+     ├─ modinfo.json
+     └─ plugins/Ultrawide219.dll
+   ```
+   (`scripts/deploy.sh` does this for you from a local checkout.)
+3. **Enable both mods** in-game: **Options → Remix**, tick *SBCameraScroll* and
+   *Ultrawide 21:9 UI*, then restart when prompted.
+4. **Configure** (see below).
 
-The devs simply never exposed a wide preset. The only genuinely fixed-size internals
-are the **1400x800** effect buffers (`lightmap`, snow) and the camera's horizontal
-centring (`hDisplace`) inside `RoomCamera`. True 21:9 at 768px tall is
-`768 * 21/9 = 1792` wide, which exceeds 1400 — so the mod widens that internal space
-to match.
+### Linux / Steam Deck (Proton)
 
-Because the height stays 768 and the width grows to the exact monitor aspect, the GPU
-scales the frame uniformly: **more field of view, zero stretch.**
+BepInEx loads through a `winhttp.dll` proxy that Proton ignores by default. Set the game's
+Steam **Launch Options** to:
 
-## How it works
+```
+WINEDLLOVERRIDES="winhttp=n,b" %command%
+```
 
-Three small, surgical hooks (`src/Ultrawide219/`):
+Without it, no mods load at all (no `BepInEx/LogOutput.log` is produced).
 
-| Hook | Target | Effect |
+## Configuration
+
+**In SBCameraScroll's Remix options:** set **Resolution → `Default`** (let this mod own the
+resolution) and turn **Dynamic Zoom → On** (or set Camera Zoom to taste) for the wide
+stitched view.
+
+**In this mod's config** (`BepInEx/config/kai.ultrawide219.cfg`, created on first launch):
+
+| Setting | Values | Notes |
 |---|---|---|
-| Harmony getter postfix | `Options.ScreenSize` | Reports `1792x768` to the whole pipeline (window, Futile, camera `sSize`, shaders). Does **not** touch the saved resolution index, so uninstalling is safe. |
-| MonoMod IL hook | `RoomCamera..ctor` | Rewrites the `1400` width literal of the three `new RenderTexture(1400, 800, …)` effect buffers to the wider internal width. |
-| Harmony getter postfix | `RoomCamera.hDisplace` | Recomputes the viewport-centring offset for the widened buffer. |
-| Plugin `Update()` one-shot | `Futile` / `Screen` | Pushes the wide width into Futile's render target + the OS window once the game is live. |
+| `Preset` | `Off`, `TrueUltrawide_1792x768`, `Monitor_2560x1080`, `Monitor_3440x1440`, `SuperUltrawide_32x9`, `MatchDisplay` | Pick the one matching your monitor. Internally always 768px tall; only the width changes. |
+| `StretchFilters` | `true`/`false` | Stretch full-screen darkens/fades/flashes to full width. |
+| `MenuLayout` | `true`/`false` | Apply the menu safe-area / slideshow fixes. |
 
-## Build
+## Building
 
-Requires the .NET SDK (tested with 10) and a local Rain World install with BepInEx
-(ships with the game since the Downpour/Remix update).
+Requires the .NET SDK. Builds `net472` on Linux via NuGet reference assemblies.
 
 ```bash
-dotnet build src/Ultrawide219/Ultrawide219.csproj -c Release
+# point at your install (default: /mnt/hdd/SteamLibrary/steamapps/common/Rain World)
+RAINWORLD_DIR="/path/to/Rain World" dotnet build src/Ultrawide219/Ultrawide219.csproj -c Release
+# or build + install in one step:
+RAINWORLD_DIR="/path/to/Rain World" scripts/deploy.sh
 ```
 
-The install path defaults to `/mnt/hdd/SteamLibrary/steamapps/common/Rain World`.
-Override with `RAINWORLD_DIR` (env) or `-p:RainWorldDir=...` (MSBuild).
-.NET Framework reference assemblies are pulled from NuGet, so it builds on Linux.
+The plugin is pure [Harmony](https://github.com/BepInEx/HarmonyX) + reflection (no
+MonoMod/IL); it references the game and BepInEx assemblies directly from your install.
 
-## Install
+## How it works (engineering notes)
 
-```bash
-scripts/deploy.sh    # build + install as a Remix mod under StreamingAssets/mods/ultrawide219/
-```
+The interesting bit is *why* this is small: a scan of the decompiled engine showed the UI
+is already centred via `Menu.Init()` + `Options.ScreenSize`, so the only real work is
+keeping the render **768-tall** and stretching a handful of fixed-width fills. The
+full-screen fixer is **magic-value-guarded** — it only rescales sprites stuck at the known
+broken constants (`scaleX ≈ 87.5` for `Futile_White`, `≈1366–1500` for `pixel`), so it
+never disturbs correctly-sized art. See the commit history for the investigation (including
+why the room art's baked **1400×800** per-camera images mean true wide *gameplay* needs
+SBCameraScroll's stitching, not just a wider viewport).
 
-Then launch the game and check `BepInEx/LogOutput.log` for the `Ultrawide 21:9` lines
-(it logs the IL-patch hit count and the applied resolution).
+## Credits
 
-### Two Rain World / Linux gotchas (both required)
+- **[SBCameraScroll](https://github.com/SchuhBaum/SBCameraScroll)** by **SchuhBaum**
+  (MIT-licensed) — the wide gameplay camera this mod is built to complement. This project
+  does not include or modify SBCameraScroll's code; it is an independent companion.
+- Rain World by Videocult / Akupara Games.
 
-1. **BepInEx injection under Proton.** Rain World is a Windows `.exe` run through
-   Proton, and BepInEx hooks in via a `winhttp.dll` proxy that Wine ignores by default.
-   Set the Steam **Launch Options** to:
-   ```
-   WINEDLLOVERRIDES="winhttp=n,b" %command%
-   ```
-   Without this, BepInEx never loads and there is no `BepInEx/LogOutput.log` at all.
+## License
 
-2. **Plugins must be Remix mods, not `BepInEx/plugins/`.** Rain World's
-   `MultiFolderLoader` patcher *quarantines* anything in `BepInEx/plugins` (it moves
-   non-whitelisted files to `BepInEx/backup` on every launch) and only loads plugins
-   from `StreamingAssets/mods/<id>/plugins/`. `deploy.sh` installs there. With no
-   `enabledMods.txt` present, all mod folders load automatically; if you start managing
-   mods in the in-game **Remix** menu, keep *Ultrawide 21:9* enabled there.
-
-## Configure
-
-After the first run, edit `BepInEx/config/kai.ultrawide219.cfg`:
-
-- `Enabled` — master switch (off = stock behaviour).
-- `Width` — internal render width at 768px tall. `1792` = 21:9, `2560` ≈ 32:9,
-  `1366` = stock 16:9. Rule of thumb: `width = round(768 * your_aspect_ratio)`.
-
-## Caveats
-
-These are inherent to widening a screen-based game and are the focus of the next pass:
-
-- **Room edges / small rooms** may reveal slightly past their intended bounds, since
-  some rooms are barely wider than one screen.
-- **Menu backgrounds** are authored at 16:9 and may show gaps at the sides
-  (gameplay is unaffected).
-- **Lightmap / snow coverage** at the new width is wired up but needs in-game
-  verification across lit rooms.
-- **Fullscreen**: on a native-3440-wide monitor the game runs `1792x768` scaled to
-  fill — same aspect, so no stretch. Borderless/windowed also works.
-
-## References
-
-- `scratchpad/decomp/` (gitignored): decompiled `RoomCamera`, `FScreen`, `Futile`,
-  `Options`, `RainWorld` that this mod was built against (ILSpy / `ilspycmd`).
-- [Sharpener](https://github.com/PJB3005/RainWorldMods/tree/master/Sharpener) — the
-  reference mod for decoupling Unity's resolution from the game's internal render.
+[MIT](LICENSE) © 2026 Kai Niermann (KaiErikNiermann).
