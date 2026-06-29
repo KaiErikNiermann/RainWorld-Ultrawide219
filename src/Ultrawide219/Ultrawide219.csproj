@@ -1,7 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <!-- Rain World runs on Mono/.NET Framework; BepInEx 5 plugins target net4xx. -->
     <TargetFramework>net472</TargetFramework>
     <AssemblyName>Ultrawide219</AssemblyName>
     <RootNamespace>Ultrawide219</RootNamespace>
@@ -11,24 +10,17 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Deterministic>true</Deterministic>
     <DebugType>portable</DebugType>
-    <!-- We never want game/BepInEx DLLs copied next to our plugin. -->
     <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
-    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
   </PropertyGroup>
 
-  <!-- BCL reference assemblies so net472 builds on Linux without a Windows targeting pack. -->
   <ItemGroup>
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
   </ItemGroup>
 
-  <!-- Game + loader assemblies. Private=false: reference only, never copy to output. -->
+  <!-- Game + loader assemblies (reference only, never copied). Pure Harmony + reflection — no MonoMod/HOOKS needed. -->
   <ItemGroup>
     <Reference Include="Assembly-CSharp">
       <HintPath>$(GameManaged)/Assembly-CSharp.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="HOOKS-Assembly-CSharp">
-      <HintPath>$(BepInExPlugins)/HOOKS-Assembly-CSharp.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="UnityEngine">
@@ -49,18 +41,6 @@
     </Reference>
     <Reference Include="0Harmony">
       <HintPath>$(BepInExCore)/0Harmony.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="MonoMod.RuntimeDetour">
-      <HintPath>$(BepInExCore)/MonoMod.RuntimeDetour.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="MonoMod.Utils">
-      <HintPath>$(BepInExCore)/MonoMod.Utils.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="Mono.Cecil">
-      <HintPath>$(BepInExCore)/Mono.Cecil.dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>
