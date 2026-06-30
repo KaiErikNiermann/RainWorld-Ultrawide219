@@ -66,7 +66,21 @@ namespace Ultrawide219
             // Menu darkens — one patch on the base GrafUpdate, dispatched per instance via the table.
             TryPatch(harmony, AccessTools.Method(typeof(Menu.Menu), "GrafUpdate", new[] { typeof(float) }),
                 new HarmonyMethod(typeof(FilterStretchPatches), nameof(MenuGrafUpdatePostfix)), "Menu.Menu.GrafUpdate");
+
+            // Centre the start-of-game control-scheme overlay (keyboard/controller diagram). Its x is
+            // positioned at `(int)(W/3) + 170.2 + (int)((1366-W)/2)`, whose `W/3` term over-scales and
+            // drags the (hand-drawn, fixed-size) diagram left of centre as the screen widens.
+            TryPatch(harmony, AccessTools.DeclaredConstructor(typeof(Menu.TutorialControlsPage)),
+                new HarmonyMethod(typeof(FilterStretchPatches), nameof(TutorialControlsCenterPostfix)),
+                "Menu.TutorialControlsPage..ctor");
         }
+
+        // Local x that reproduces the vanilla (1366-wide) framing of the ControlMap: the original
+        // formula evaluated at W=1366 is `(int)(1366/3) + 170.2 = 625.2`. Because a page-child at this
+        // local x is re-mapped by Menu.Init's central shift onto the same offset-from-centre at ANY
+        // width, setting it here keeps the diagram centred exactly as it is on a 16:9 screen — no
+        // stretching (it's hand-drawn art), just centred.
+        private const float VanillaControlMapLocalX = 625.2f;
 
         private static void TryPatch(Harmony harmony, MethodBase? method, HarmonyMethod postfix, string label)
         {
@@ -105,6 +119,13 @@ namespace Ultrawide219
             if (!Plugin.StretchFilters.Value) return;
             if (!MenuDarkenFields.TryGetValue(__instance.GetType(), out var fields)) return;
             foreach (var name in fields) UltrawideState.FixFullScreen(GetField(__instance, name));
+        }
+
+        private static void TutorialControlsCenterPostfix(Menu.TutorialControlsPage __instance)
+        {
+            if (!Plugin.Enabled.Value || !Plugin.MenuFixes.Value) return;
+            var cm = __instance.controlMap;
+            if (cm != null) cm.pos = new Vector2(VanillaControlMapLocalX, cm.pos.y);
         }
         // ReSharper restore InconsistentNaming
 

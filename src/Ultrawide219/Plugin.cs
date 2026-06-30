@@ -23,7 +23,7 @@ namespace Ultrawide219
     {
         public const string Guid = "kai.ultrawide219";
         public const string Name = "Ultrawide 21:9 UI";
-        public const string Version = "0.2.0";
+        public const string Version = "0.2.1";
 
         internal static ManualLogSource? Log { get; private set; }
 

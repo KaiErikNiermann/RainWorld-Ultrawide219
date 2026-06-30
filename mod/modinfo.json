@@ -1,7 +1,7 @@
 {
 	"id": "ultrawide219",
 	"name": "Ultrawide 21:9 UI",
-	"version": "0.2.0",
+	"version": "0.2.1",
 	"authors": "KaiErikNiermann",
 	"description": "Companion to SBCameraScroll that makes 21:9 (and wider) seamless OUTSIDE gameplay. Forces a 768-tall internal render at a 21:9 width (so the UI coordinate space stays valid), stretches uniform full-screen filters (pause darken, fades, ghost/electric flashes, letterbox bars) to span the full width, and fixes genuine wide-screen layout bugs (safe-area offsets, slideshow centring). Hand-drawn art stays centred + pillarboxed. Set SBCameraScroll's own Resolution option to Default and pick your monitor preset in this mod's config (BepInEx/config/kai.ultrawide219.cfg).",
 	"requirements": ["SBCameraScroll"],
